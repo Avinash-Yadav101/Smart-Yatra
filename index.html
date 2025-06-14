@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🚌 Smart Yatra</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Leaflet CSS -->
+   <!-- <link rel="stylesheet" href="style.css" /> -->
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      padding: 1rem;
+      background-color: #2196f3;
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 80px);
+    }
+
+    #map {
+      flex: 3;
+      height: 100%;
+    }
+
+    #sidebar {
+      flex: 1;
+      padding: 1rem;
+      background-color: #f1f1f1;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🚌 Smart Yatra</h1>
+  </header>
+
+  <main class="container">
+    <!-- Map Section -->
+    <section id="map"></section>
+
+    <!-- Sidebar Info Section -->
+    <aside id="sidebar">
+      <h2>Bus Info</h2>
+      <div id="bus-info">Tracking a simulated bus...</div>
+    </aside>
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Socket.IO (Optional if you're using real-time server updates) -->
+  <!-- <script src="/socket.io/socket.io.js"></script> -->
+
+  <!-- Map Logic -->
+  <script>
+    // Initialize map at Kathmandu
+    const map = L.map('map').setView([27.7172, 85.3240], 14);
+
+    // Load OSM tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Custom bus icon
+    const busIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61231.png',
+      iconSize: [32, 37],
+      iconAnchor: [16, 37],
+    });
+
+    // Add the bus marker
+    let busMarker = L.marker([27.7172, 85.3240], { icon: busIcon }).addTo(map)
+      .bindPopup('🚌 Bus is here')
+      .openPopup();
+
+    // Simulate bus movement (replace this with live API or socket updates)
+    let lat = 27.7172;
+    let lng = 85.3240;
+
+    setInterval(() => {
+      lat += (Math.random() - 0.5) * 0.001;
+      lng += (Math.random() - 0.5) * 0.001;
+
+      busMarker.setLatLng([lat, lng]);
+      map.panTo([lat, lng]);
+
+      document.getElementById('bus-info').innerHTML = `Latitude: ${lat.toFixed(5)}, Longitude: ${lng.toFixed(5)}`;
+    }, 3000);
+  </script>
+
+  <!-- External Scripts (Only if needed) -->
+  <!-- <script src="bus_marker.js"></script>
+  <script src="passenger.js"></script>
+  <script src="simulator.js"></script>
+  <script src="main.js"></script> -->
+</body>
+</html>

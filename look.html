@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bus Tracking System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    header {
+      background: #1a73e8;
+      color: white;
+      padding: 1rem;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      height: calc(100vh - 64px);
+    }
+    #map {
+      flex: 3;
+    }
+    #sidebar {
+      flex: 1;
+      background: #f7f7f7;
+      padding: 1rem;
+      overflow-y: auto;
+      border-left: 1px solid #ccc;
+    }
+    .bus-card {
+      background: white;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .bus-card h4 {
+      margin: 0 0 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <header>🚌 Real-Time Bus Tracking System</header>
+  <div class="container">
+    <div id="map"></div>
+    <div id="sidebar">
+      <h3>Active Buses</h3>
+      <div id="bus-info"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([27.7172, 85.3240], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const busIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61231.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    const markers = {};
+    const busData = {};
+
+    function updateSidebar() {
+      const sidebar = document.getElementById('bus-info');
+      sidebar.innerHTML = '';
+
+      for (const busId in busData) {
+        const bus = busData[busId];
+        const card = document.createElement('div');
+        card.className = 'bus-card';
+        card.innerHTML = `
+          <h4>Bus ID: ${busId}</h4>
+          <p>Latitude: ${bus.latitude.toFixed(5)}</p>
+          <p>Longitude: ${bus.longitude.toFixed(5)}</p>
+          <p>Last Update: ${new Date(bus.timestamp).toLocaleTimeString()}</p>
+        `;
+        sidebar.appendChild(card);
+      }
+    }
+
+    function updateMap(busId, latitude, longitude) {
+      const latlng = [latitude, longitude];
+
+      if (markers[busId]) {
+        markers[busId].setLatLng(latlng);
+      } else {
+        const marker = L.marker(latlng, { icon: busIcon }).addTo(map);
+        marker.bindPopup(`Bus ID: ${busId}`);
+        markers[busId] = marker;
+      }
+
+      busData[busId] = { latitude, longitude, timestamp: Date.now() };
+      updateSidebar();
+    }
+
+    // WebSocket for real-time updates
+    const socket = new WebSocket('ws://localhost:3000');
+
+    socket.onmessage = (event) => {
+      const { busId, latitude, longitude } = JSON.parse(event.data);
+      updateMap(busId, latitude, longitude);
+    };
+
+    socket.onerror = () => {
+      console.error("WebSocket failed, fallback to polling");
+      setInterval(async () => {
+        const res = await fetch('http://localhost:3000/locations');
+        const data = await res.json();
+        for (const busId in data) {
+          const { latitude, longitude } = data[busId];
+          updateMap(busId, latitude, longitude);
+        }
+      }, 5000);
+    };
+  </script>
+</body>
+</html>

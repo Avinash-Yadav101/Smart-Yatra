@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-Time Bus Tracker</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Initialize the map and set its view to a default location
+  var map = L.map('map').setView([27.7172, 85.3240], 13); // Kathmandu coordinates
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Add a marker to represent the bus
+  var busIcon = L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61231.png',
+    iconSize: [32, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -28]
+  });
+
+  var busMarker = L.marker([27.7172, 85.3240], {icon: busIcon}).addTo(map)
+    .bindPopup('Bus is here').openPopup();
+
+  // Function to update bus location
+  function updateBusLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lon = position.coords.longitude;
+        busMarker.setLatLng([lat, lon]);
+        map.setView([lat, lon], 13);
+      });
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
+
+  // Update bus location every 5 seconds
+  setInterval(updateBusLocation, 5000);
+</script>
+
+</body>
+</html>

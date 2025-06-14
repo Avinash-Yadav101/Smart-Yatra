@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bus GPS Tracker</title>
+</head>
+<body>
+  <h2>Tracking Your Bus...</h2>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    function sendLocation(position) {
+      const { latitude, longitude } = position.coords;
+      socket.emit('busLocationUpdate', {
+        id: 'bus1',
+        lat: latitude,
+        lng: longitude
+      });
+      console.log('Sent:', latitude, longitude);
+    }
+
+    function handleError(error) {
+      console.error('Error getting location:', error);
+    }
+
+    // Ask for location permission and start tracking
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(sendLocation, handleError, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000
+      });
+    } else {
+      alert('Geolocation is not supported by this browser.');
+    }
+  </script>
+</body>
+</html>
